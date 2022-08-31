@@ -1,2 +1,2 @@
 #!/bin/bash
-readlink -f file.txt
+/bin/bash
