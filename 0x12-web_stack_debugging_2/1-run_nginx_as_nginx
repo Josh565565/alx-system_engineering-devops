@@ -1,19 +1,7 @@
 #!/usr/bin/env bash
-
-# Install nginx if it's not already installed
-if ! command -v nginx &> /dev/null
-then
-    apt-get update
-    apt-get install -y nginx
-fi
-
-# Set nginx user to nginx
-sed -i 's/user www-data;/user nginx;/' /etc/nginx/nginx.conf
-
-# Configure nginx to listen on all active IPs on port 8080
-sed -i '/listen \[::\]:80 default_server;/a \\tlisten [::]:8080 default_server;' /etc/nginx/sites-available/default
-sed -i '/listen 80 default_server;/a \\tlisten 8080 default_server;' /etc/nginx/sites-available/default
-
-# Restart nginx service
-service nginx restart
-
+# fix container:: task 2
+pkill -f apache2
+chmod 644 /etc/nginx/nginx.conf
+sed -i "1i user nginx;" /etc/nginx/nginx.conf
+sed -i 's/80/8080/' /etc/nginx/sites-enabled/default
+sudo -u nginx service nginx restart
