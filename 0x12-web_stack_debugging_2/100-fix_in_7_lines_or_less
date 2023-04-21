@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Fix this container so that Nginx is running as the nginx user
-
 pkill -f apache2
 chmod 644 /etc/nginx/nginx.conf
 sed -Ei 's/\s*#?\s*user .*/user nginx;/' /etc/nginx/nginx.conf
