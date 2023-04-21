@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 # runs whoami command under user passed as arg1
 echo "Running whoami command under user $1..."
-su "$1" -s /bin/bash -c 'whoami'
+su "$1" -s /bin/bash -c whoami
