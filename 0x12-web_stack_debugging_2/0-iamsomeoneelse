@@ -1,3 +1,9 @@
 #!/usr/bin/env bash
 # runs whoami command under user passed as arg1
-su "$1" -s /bin/bash -c 'whoami'
+if [ $# -eq 0 ]; then
+  echo "Usage: $0 <username>"
+  exit 1
+fi
+
+echo "Running whoami command under user $1..."
+sudo -u "$1" whoami
