@@ -1,47 +1,60 @@
 #!/usr/bin/python3
-'''Task 3 : Count it!'''
-import pprint
-import re
+"""
+   Query Reddit API to determine subreddit sub count
+
+"""
 import requests
 
-BASE_URL = 'http://reddit.com/r/{}/hot.json'
 
-
-def count_words(subreddit, word_list, hot_list=[], after=None):
-    '''function count_words : Get ALL hot posts'''
-    headers = {'User-agent': 'Unix:0-subs:v1'}
-    params = {'limit': 100}
-    if isinstance(after, str):
-        if after != "STOP":
-            params['after'] = after
-        else:
-            return print_results(word_list, hot_list)
-
-    response = requests.get(BASE_URL.format(subreddit),
-                            headers=headers, params=params)
-    if response.status_code != 200:
-        return None
-    data = response.json().get('data', {})
-    after = data.get('after', 'STOP')
-    if not after:
-        after = "STOP"
-    hot_list = hot_list + [post.get('data', {}).get('title')
-                           for post in data.get('children', [])]
-    return count_words(subreddit, word_list, hot_list, after)
-
-
-def print_results(word_list, hot_list):
-    '''function print_results :Prints request results'''
-    count = {}
-    for word in word_list:
-        count[word] = 0
-    for title in hot_list:
+def count_words(subreddit, word_list, count_list=[], next_page=None):
+    """Request subreddit recursively using pagination
+    """
+    # convert word_list to dict with count
+    if not count_list:
         for word in word_list:
-            count[word] = count[word] +\
-             len(re.findall(r'(?:^| ){}(?:$| )'.format(word), title, re.I))
+            count_list.append(dict({'keyword': word,
+                                    'count': 0}))
 
-    count = {k: v for k, v in count.items() if v > 0}
-    words = sorted(list(count.keys()))
-    for word in sorted(words,
-                       reverse=True, key=lambda k: count[k]):
-        print("{}: {}".format(word, count[word]))
+    # NETWORKING
+    # set custom user-agent
+    user_agent = '0x16-api_advanced-jmajetich'
+    url = 'https://www.reddit.com/r/{}/hot.json'.format(subreddit)
+    # if page specified, pass as parameter
+    if next_page:
+        url += '?after={}'.format(next_page)
+
+    headers = {'User-Agent': user_agent}
+
+    r = requests.get(url, headers=headers, allow_redirects=False)
+
+    if r.status_code != 200:
+        return
+
+    # DATA PARSING
+    # load response unit from json
+    data = r.json()['data']
+
+    # extract list of pages
+    posts = data['children']
+    for post in posts:
+        title = post['data']['title']
+        for item in count_list:
+            title_lower = title.lower()
+            title_list = title_lower.split()
+            item['count'] += title_list.count(item['keyword'].lower())
+
+    next_page = data['after']
+    if next_page is not None:
+        return count_words(subreddit, word_list, count_list, next_page)
+    else:
+        # sort list by count
+        sorted_list = sorted(count_list,
+                             key=lambda word: (word['count'], word['keyword']),
+                             reverse=True)
+        keywords_matched = 0
+        # print keywords and counts
+        for word in sorted_list:
+            if word['count'] > 0:
+                print('{}: {}'.format(word['keyword'], word['count']))
+                keywords_matched += 1
+        return
